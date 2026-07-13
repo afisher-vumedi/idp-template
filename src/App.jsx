@@ -532,7 +532,7 @@ export default function App() {
     .copybtn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--accent);border-radius:7px;background:var(--card);color:var(--accent-deep);font-family:inherit;font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;text-transform:none;letter-spacing:0}
     .copybtn:hover{background:var(--accent-soft)}
     .prompttext{margin:0;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.78rem;line-height:1.5;color:var(--ink-soft);white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px 12px;max-height:220px;overflow:auto}
-    .homeprompt{background:linear-gradient(135deg,#ffffff,var(--gold-soft))}
+    .homeprompt{background:linear-gradient(135deg,#ffffff,var(--sage-soft) 60%,var(--accent-soft));border:1px solid #d6e4e4}
     .homeprompthead{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
     .homepromptq{font-size:1.35rem;font-weight:600;line-height:1.3;color:var(--ink);margin-bottom:14px}
     .savedmsg{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;color:var(--success);padding:10px 0}
@@ -805,7 +805,7 @@ function HomeTab({ profile, goals, reflections, discover, setTab, onAddReflectio
 
       <div className="card homeprompt" style={{ marginBottom: 22 }}>
         <div className="homeprompthead">
-          <span className="eyebrow" style={{ margin: 0 }}><Lightbulb size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} />Reflection of the day</span>
+          <span className="eyebrow" style={{ margin: 0, color: "var(--accent-deep)" }}><Lightbulb size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} />Reflection of the day</span>
           <button className="copybtn" onClick={newPrompt} style={{ textTransform: "none" }}><RefreshCw size={13} /> New prompt</button>
         </div>
         <div className="homepromptq serif">{prompt}</div>
