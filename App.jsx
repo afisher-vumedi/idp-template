@@ -323,11 +323,11 @@ function dateStatus(s, completed) {
 // ---- storage helpers (graceful if unavailable) ----
 const store = {
   async get(key) {
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
     catch { return null; }
   },
   async set(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    try { await window.storage.set(key, JSON.stringify(val)); } catch {}
   },
 };
 
