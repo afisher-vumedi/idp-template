@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Compass, Target, LayoutGrid, NotebookPen, Home, Calendar, Lightbulb, RefreshCw, FileDown, Plus, Check, ChevronRight, ChevronLeft, Trash2, Pencil, Circle, CircleDot, CheckCircle2, PauseCircle, Sparkles, ArrowRight, Copy, X } from "lucide-react";
+import { Compass, Target, LayoutGrid, NotebookPen, Home, Calendar, Lightbulb, RefreshCw, FileDown, HelpCircle, Plus, Check, ChevronRight, ChevronLeft, Trash2, Pencil, Circle, CircleDot, CheckCircle2, PauseCircle, Sparkles, ArrowRight, Copy, X } from "lucide-react";
 
 /* =========================================================================
    IDP Studio — internal prototype
@@ -194,34 +194,34 @@ const ROLES = {
 // Discovery prompts — for people who don't know where to grow.
 const DISCOVERY = [
   { q: "When you picture loving your work a year from now, what's different?", weights: { strategy: 2, leadership: 1 }, options: [
-    { t: "I'm trusted with bigger, more ambiguous problems", w: { problemSolving: 2, strategy: 1 } },
-    { t: "I'm guiding or growing other people", w: { people: 2, leadership: 2 } },
-    { t: "I'm genuinely excellent at my core craft", w: { technical: 3 } },
-    { t: "I'm calmer and more in control of my workload", w: { timeManagement: 3 } },
+    { t: "I'm trusted with bigger, more ambiguous problems", w: { problemSolving: 2, strategy: 1 }, path: "broader" },
+    { t: "I'm guiding or growing other people", w: { people: 2, leadership: 2 }, path: "broader" },
+    { t: "I'm genuinely excellent at my core craft", w: { technical: 3 }, path: "deeper" },
+    { t: "I'm calmer and more in control of my workload", w: { timeManagement: 3 }, path: "deeper" },
   ]},
   { q: "What most often gets in your way right now?", weights: {}, options: [
-    { t: "Getting my ideas heard or understood", w: { communication: 3 } },
-    { t: "Too much to do, not enough focus", w: { timeManagement: 3 } },
-    { t: "Friction working across teams", w: { collaboration: 3 } },
-    { t: "Knowing which problems are worth solving", w: { strategy: 2, problemSolving: 1 } },
+    { t: "Getting my ideas heard or understood", w: { communication: 3 }, path: "deeper" },
+    { t: "Too much to do, not enough focus", w: { timeManagement: 3 }, path: "deeper" },
+    { t: "Friction working across teams", w: { collaboration: 3 }, path: "broader" },
+    { t: "Knowing which problems are worth solving", w: { strategy: 2, problemSolving: 1 }, path: "broader" },
   ]},
   { q: "Which kind of feedback would you be proudest to hear?", weights: {}, options: [
-    { t: "\"You made everyone around you better\"", w: { people: 2, leadership: 1 } },
-    { t: "\"You're the person we go to for the hard stuff\"", w: { problemSolving: 2, technical: 1 } },
-    { t: "\"You communicate so clearly\"", w: { communication: 3 } },
-    { t: "\"You always see the bigger picture\"", w: { strategy: 3 } },
+    { t: "\"You made everyone around you better\"", w: { people: 2, leadership: 1 }, path: "broader" },
+    { t: "\"You're the person we go to for the hard stuff\"", w: { problemSolving: 2, technical: 1 }, path: "deeper" },
+    { t: "\"You communicate so clearly\"", w: { communication: 3 }, path: "deeper" },
+    { t: "\"You always see the bigger picture\"", w: { strategy: 3 }, path: "broader" },
   ]},
   { q: "Pick the kind of task you'd happily lose an afternoon to.", weights: {}, options: [
-    { t: "Going deep to master a tricky tool or skill", w: { technical: 3 } },
-    { t: "Untangling a messy project between teams", w: { collaboration: 2, leadership: 1 } },
-    { t: "Shaping a rough idea into a clear plan", w: { strategy: 2, communication: 1 } },
-    { t: "Helping a teammate get unstuck", w: { people: 3 } },
+    { t: "Going deep to master a tricky tool or skill", w: { technical: 3 }, path: "deeper" },
+    { t: "Untangling a messy project between teams", w: { collaboration: 2, leadership: 1 }, path: "broader" },
+    { t: "Shaping a rough idea into a clear plan", w: { strategy: 2, communication: 1 }, path: "broader" },
+    { t: "Helping a teammate get unstuck", w: { people: 3 }, path: "broader" },
   ]},
   { q: "When you take a real step forward, what usually made it happen?", weights: {}, options: [
-    { t: "Someone coached or sponsored me", w: { people: 1, leadership: 2 } },
-    { t: "I pushed past something that scared me", w: { problemSolving: 2, leadership: 1 } },
-    { t: "I finally explained my thinking well", w: { communication: 3 } },
-    { t: "I got organized and protected my focus", w: { timeManagement: 3 } },
+    { t: "Someone coached or sponsored me", w: { people: 1, leadership: 2 }, path: "broader" },
+    { t: "I pushed past something that scared me", w: { problemSolving: 2, leadership: 1 }, path: "broader" },
+    { t: "I finally explained my thinking well", w: { communication: 3 }, path: "deeper" },
+    { t: "I got organized and protected my focus", w: { timeManagement: 3 }, path: "deeper" },
   ]},
 ];
 
@@ -235,7 +235,50 @@ const STATUS_ORDER = ["notStarted", "inProgress", "onHold", "done"];
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-// Rotating bank of thought-provoking development prompts for the home page.
+// ── Vumedi growth philosophy: lattice, not ladder ──
+// The two directions growth can take (from the Expert / Mobility framing).
+const GROWTH_PATHS = [
+  {
+    key: "deeper",
+    label: "Go Deeper",
+    tag: "The Expert Path",
+    blurb: "Growth by mastery. Becoming genuinely excellent at your craft — the person others turn to with the hard problems. Reputation grows through expertise, not a change of title.",
+    soundsLike: "\"I want to get really good at this.\"",
+    looksLike: "Leading the trickiest projects in your area, mentoring others in your craft, and becoming the go-to expert in your function.",
+  },
+  {
+    key: "broader",
+    label: "Go Broader",
+    tag: "The Mobility Path",
+    blurb: "Growth by breadth. Stretching sideways into new scope, new stakeholders, or leading people and projects. Your range grows by taking on something different.",
+    soundsLike: "\"I want to try something new / lead.\"",
+    looksLike: "A stretch assignment on another team, a cross-functional project, a job rotation, or a move into an adjacent function.",
+  },
+];
+
+// The three pillars — a lens for what KIND of growth someone is reaching for.
+const GROWTH_PILLARS = [
+  {
+    key: "skill",
+    label: "Skill Development",
+    blurb: "Getting better at the craft of your role — deepening capability and quality.",
+    soundsLike: "\"I want to get stronger at…\"",
+  },
+  {
+    key: "experience",
+    label: "Experience Expansion",
+    blurb: "New scope, exposure, or challenge — stretch and breadth.",
+    soundsLike: "\"I want to try something new.\"",
+  },
+  {
+    key: "performance",
+    label: "Performance Growth",
+    blurb: "Closing a gap in your current role before the next step — consistency and reliability.",
+    soundsLike: "\"Consistency & reliability first.\"",
+  },
+];
+
+
 const HOME_PROMPTS = [
   "What's one thing you did this week that you're proud of?",
   "Where did you feel most energized at work recently, and why?",
@@ -252,6 +295,15 @@ const HOME_PROMPTS = [
   "Where do you want more responsibility, and what's holding you back?",
   "What does 'great' look like in your role, and how close are you?",
   "What's a small habit that would compound into a big difference over a year?",
+  // Lattice-inspired: drawn from Vumedi's growth-conversation questions
+  "What areas of your work help you grow the most?",
+  "What skills would you like to continue developing?",
+  "Where would you like to expand your impact?",
+  "What experiences or projects would help you grow?",
+  "Right now, do you want to go deeper in your craft, or broader into something new?",
+  "Is there a gap in your current role you'd like to close before your next step?",
+  "What would 'getting really good at this' look like for you this year?",
+  "What's something new you'd like to try or lead?",
 ];
 
 // Date helpers for action deadlines
@@ -279,12 +331,56 @@ const store = {
   },
 };
 
+const TAB_GUIDE = [
+  { icon: Home, label: "Home", desc: "Your starting point — a daily reflection prompt, what's coming up, and gentle nudges." },
+  { icon: Compass, label: "Discover", desc: "Not sure where to grow? A few quick questions point you toward areas worth exploring." },
+  { icon: Target, label: "My plan", desc: "Build your focus areas — each with a goal, concrete actions, and target dates." },
+  { icon: LayoutGrid, label: "Progress", desc: "Track how your actions are moving along, with a timeline and status for each." },
+  { icon: NotebookPen, label: "Reflect", desc: "A dated journal for the bigger-picture thinking that isn't tied to one goal." },
+];
+
+function WelcomeCard({ onDismiss, firstTime, setTab }) {
+  return (
+    <div className="modal-bg" onClick={onDismiss}>
+      <div className="modal welcomemodal" onClick={(e) => e.stopPropagation()}>
+        <div className="modalhead">
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 4 }}>{firstTime ? "Welcome" : "Quick tour"}</div>
+            <h2 className="serif" style={{ fontSize: "1.4rem", margin: 0 }}>{firstTime ? "Welcome to your development plan" : "What each tab does"}</h2>
+          </div>
+          <button className="iconbtn" onClick={onDismiss} style={{ color: "var(--muted)" }}><X size={20} /></button>
+        </div>
+        <p className="ideanote" style={{ marginTop: 0, marginBottom: 16 }}>
+          This is a private space to think about your growth — everything you enter stays in your browser. Here's what you'll find:
+        </p>
+        <div className="tabguide">
+          {TAB_GUIDE.map((t) => (
+            <div className="tabguiderow" key={t.label}>
+              <div className="tabguideicon"><t.icon size={18} /></div>
+              <div>
+                <div className="tabguidelabel">{t.label}</div>
+                <div className="tabguidedesc">{t.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 18 }} onClick={onDismiss}>
+          {firstTime ? "Got it — let's start" : "Got it"}
+        </button>
+        <p className="ideanote" style={{ textAlign: "center", marginTop: 10, marginBottom: 0 }}>You can reopen this anytime with the <HelpCircle size={12} style={{ verticalAlign: "-2px" }} /> icon up top.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("home");
   const [profile, setProfile] = useState({ name: "", title: "", role: "", vision: "" });
   const [goals, setGoals] = useState([]);
   const [reflections, setReflections] = useState([]);
   const [discover, setDiscover] = useState(null); // { ranked: [keys], date, ts }
+  const [welcomeSeen, setWelcomeSeen] = useState(true); // default true to avoid flash before load
+  const [showWelcome, setShowWelcome] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -293,10 +389,13 @@ export default function App() {
       const g = await store.get("idp:goals");
       const r = await store.get("idp:reflections");
       const d = await store.get("idp:discover");
+      const w = await store.get("idp:welcomeSeen");
       if (p) setProfile(p);
       if (g) setGoals(g);
       if (r) setReflections(r);
       if (d) setDiscover(d);
+      if (!w) setShowWelcome(true); // first visit: show the welcome card
+      setWelcomeSeen(!!w);
       setLoaded(true);
     })();
   }, []);
@@ -304,6 +403,8 @@ export default function App() {
   useEffect(() => { if (loaded) store.set("idp:goals", goals); }, [goals, loaded]);
   useEffect(() => { if (loaded) store.set("idp:reflections", reflections); }, [reflections, loaded]);
   useEffect(() => { if (loaded) store.set("idp:discover", discover); }, [discover, loaded]);
+
+  const dismissWelcome = () => { setShowWelcome(false); setWelcomeSeen(true); store.set("idp:welcomeSeen", true); };
 
   const css = `
     :root{
@@ -323,6 +424,16 @@ export default function App() {
     .brandname{font-family:'Fraunces',serif;font-size:1.18rem;font-weight:600;letter-spacing:-.01em}
     .brandsub{font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
     .nav{display:flex;gap:4px;background:var(--paper);padding:4px;border-radius:11px;border:1px solid var(--line)}
+    .navwrap{display:flex;align-items:center;gap:10px}
+    .helpbtn{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--muted);display:grid;place-items:center;cursor:pointer;flex-shrink:0;transition:.15s}
+    .helpbtn:hover{color:var(--accent-deep);border-color:var(--accent);background:var(--accent-soft)}
+    .welcomemodal{max-width:520px}
+    .tabguide{display:flex;flex-direction:column;gap:3px}
+    .tabguiderow{display:flex;align-items:flex-start;gap:13px;padding:11px 12px;border-radius:11px;transition:.15s}
+    .tabguiderow:hover{background:var(--paper)}
+    .tabguideicon{width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent-deep);display:grid;place-items:center;flex-shrink:0}
+    .tabguidelabel{font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:2px}
+    .tabguidedesc{font-size:.85rem;color:var(--ink-soft);line-height:1.45}
     .navbtn{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;background:transparent;color:var(--ink-soft);border-radius:8px;font-size:.86rem;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
     .navbtn:hover{color:var(--ink)}
     .navbtn.on{background:var(--card);color:var(--accent-deep);box-shadow:0 1px 3px rgba(0,0,0,.06);font-weight:600}
@@ -413,6 +524,28 @@ export default function App() {
     .nudge{display:flex;align-items:center;gap:12px;padding:13px 12px;margin:0 -12px 2px;border-radius:11px;cursor:pointer;transition:.15s}
     .nudge:hover{background:var(--paper)}
     .archivehead{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;cursor:pointer;font-family:inherit;padding:0}
+    .lattice{border-left:3px solid var(--gold)}
+    .pathgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:640px){.pathgrid{grid-template-columns:1fr}}
+    .pathcard{border-radius:12px;padding:15px 16px}
+    .path-deeper{background:var(--accent);color:#fff}
+    .path-broader{background:var(--gold);color:#3a2c10}
+    .pathdim{opacity:.42;filter:saturate(.7)}
+    .pathtag{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:3px}
+    .pathlabel{font-size:1.15rem;font-weight:600;margin-bottom:8px}
+    .pathblurb{font-size:.86rem;line-height:1.5;opacity:.95;margin-bottom:9px}
+    .pathmeta{font-size:.8rem;line-height:1.45;opacity:.92;margin-top:5px}
+    .pathmeta b{font-weight:700}
+    .pillargrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:640px){.pillargrid{grid-template-columns:1fr}}
+    .pillarcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:15px}
+    .pillarnum{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.85rem;margin-bottom:9px}
+    .pillar-0{background:#6d94c4}
+    .pillar-1{background:var(--sage-deep)}
+    .pillar-2{background:var(--gold)}
+    .pillarlabel{font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:5px}
+    .pillarblurb{font-size:.82rem;color:var(--ink-soft);line-height:1.5;margin-bottom:8px}
+    .pillarsounds{font-size:.8rem;font-style:italic;color:var(--muted)}
     .exporthead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:.74rem;font-weight:700;letter-spacing:.02em;color:var(--ink-soft);text-transform:uppercase}
     .exporttext{margin:0;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.78rem;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;max-height:340px;overflow:auto}
     .timingrow{display:flex;align-items:center;gap:9px;padding:9px 14px;background:var(--accent-soft);border:1px solid var(--accent);border-top:0;border-bottom-left-radius:13px;border-bottom-right-radius:13px}
@@ -503,20 +636,27 @@ export default function App() {
             <div className="brandsub">Individual Development Plan</div>
           </div>
         </div>
-        <nav className="nav">
-          {[
-            ["home", "Home", Home],
-            ["discover", "Discover", Compass],
-            ["plan", "My plan", Target],
-            ["track", "Progress", LayoutGrid],
-            ["reflect", "Reflect", NotebookPen],
-          ].map(([k, label, Icon]) => (
-            <button key={k} className={`navbtn ${tab === k ? "on" : ""}`} onClick={() => setTab(k)}>
-              <Icon size={16} /> {label}
-            </button>
-          ))}
-        </nav>
+        <div className="navwrap">
+          <nav className="nav">
+            {[
+              ["home", "Home", Home],
+              ["discover", "Discover", Compass],
+              ["plan", "My plan", Target],
+              ["track", "Progress", LayoutGrid],
+              ["reflect", "Reflect", NotebookPen],
+            ].map(([k, label, Icon]) => (
+              <button key={k} className={`navbtn ${tab === k ? "on" : ""}`} onClick={() => setTab(k)}>
+                <Icon size={16} /> {label}
+              </button>
+            ))}
+          </nav>
+          <button className="helpbtn" onClick={() => setShowWelcome(true)} title="What's here?" aria-label="What's here?">
+            <HelpCircle size={18} />
+          </button>
+        </div>
       </div>
+
+      {showWelcome && <WelcomeCard onDismiss={dismissWelcome} firstTime={!welcomeSeen} setTab={setTab} />}
 
       <div className="main">
         {tab === "home" && <HomeTab profile={profile} goals={goals} reflections={reflections} discover={discover}
@@ -533,6 +673,50 @@ export default function App() {
 }
 
 /* ---------------- HOME ---------------- */
+function LatticeIntro() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="card lattice" style={{ marginBottom: 22 }}>
+      <button className="archivehead" onClick={() => setOpen(!open)}>
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 4 }}>How we think about growth at Vumedi</div>
+          <div className="serif" style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--ink)" }}>A lattice, not a ladder</div>
+        </div>
+        <ChevronRight size={20} style={{ color: "var(--muted)", transform: open ? "rotate(90deg)" : "none", transition: ".2s", flexShrink: 0 }} />
+      </button>
+      <p style={{ fontSize: ".92rem", color: "var(--ink-soft)", lineHeight: 1.6, margin: "12px 0 0" }}>
+        Growth isn't only a promotion. A ladder has one direction — up. A lattice has many: you can grow by getting deeper in your craft, or broader across new experiences, without a title change. Both are real growth.
+      </p>
+      {open && (
+        <div style={{ marginTop: 18 }}>
+          <div className="pathgrid">
+            {GROWTH_PATHS.map((p) => (
+              <div key={p.key} className={`pathcard path-${p.key}`}>
+                <div className="pathtag">{p.tag}</div>
+                <div className="pathlabel serif">{p.label}</div>
+                <div className="pathblurb">{p.blurb}</div>
+                <div className="pathmeta"><b>Sounds like:</b> {p.soundsLike}</div>
+                <div className="pathmeta"><b>Can look like:</b> {p.looksLike}</div>
+              </div>
+            ))}
+          </div>
+          <div className="eyebrow" style={{ margin: "20px 0 10px" }}>Three kinds of growth to reach for</div>
+          <div className="pillargrid">
+            {GROWTH_PILLARS.map((p, i) => (
+              <div key={p.key} className="pillarcard">
+                <div className={`pillarnum pillar-${i}`}>{i + 1}</div>
+                <div className="pillarlabel">{p.label}</div>
+                <div className="pillarblurb">{p.blurb}</div>
+                <div className="pillarsounds">{p.soundsLike}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HomeTab({ profile, goals, reflections, discover, setTab, onAddReflection }) {
   const [exportOpen, setExportOpen] = useState(false);
   const dayIndex = Math.floor(Date.now() / 86400000);
@@ -599,6 +783,8 @@ function HomeTab({ profile, goals, reflections, discover, setTab, onAddReflectio
       <p className="lede">{profile.vision || "Small, steady steps add up. Here's where things stand and a moment to reflect."}</p>
 
       {exportOpen && <ExportModal profile={profile} goals={goals} reflections={reflections} onClose={() => setExportOpen(false)} />}
+
+      <LatticeIntro />
 
       <div className="card homeprompt" style={{ marginBottom: 22 }}>
         <div className="homeprompthead">
