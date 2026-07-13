@@ -22,6 +22,7 @@ const COMPETENCIES = {
       "Pick the lowest-rated one and set a focused month of deliberate practice",
       "Ask my manager and a peer what 'great' looks like in my role, and close the gap",
     ],
+    learning: ["Developing Your Expertise", "Deliberate Practice", "Skill Development"],
   },
   communication: {
     label: "Communication",
@@ -36,6 +37,7 @@ const COMPETENCIES = {
       "Take a structured writing or storytelling course and apply it to one real document",
       "Shadow someone known for clear communication and debrief what they do differently",
     ],
+    learning: ["Communication Foundations", "Communicating with Confidence", "Writing in Plain Language"],
   },
   leadership: {
     label: "Leadership & Influence",
@@ -50,6 +52,7 @@ const COMPETENCIES = {
       "Find a mentor one level above your target role and meet monthly",
       "Run a retro for your team and own the follow-through on action items",
     ],
+    learning: ["Leadership Foundations", "New Manager Foundations", "Leading without Authority"],
   },
   problemSolving: {
     label: "Problem Solving",
@@ -64,6 +67,7 @@ const COMPETENCIES = {
       "Document your decision process on a real call, then review it with someone you trust",
       "Study a framework (e.g. root-cause analysis) and use it on a live issue",
     ],
+    learning: ["Critical Thinking", "Problem Solving Techniques", "Decision Making"],
   },
   technical: {
     label: "Technical Depth",
@@ -78,6 +82,7 @@ const COMPETENCIES = {
       "Pair with a senior colleague on something you'd normally avoid",
       "Rebuild or improve one existing piece of work using a new technique you learned",
     ],
+    learning: ["<AREA> fundamentals", "Learning the basics", "Advanced techniques"],
   },
   collaboration: {
     label: "Collaboration",
@@ -92,6 +97,7 @@ const COMPETENCIES = {
       "Practice giving structured peer feedback and ask for it in return",
       "Facilitate a working session and gather input on how it landed",
     ],
+    learning: ["Teamwork Foundations", "Cross-Functional Collaboration", "Working with Difficult People"],
   },
   timeManagement: {
     label: "Time & Priorities",
@@ -106,6 +112,7 @@ const COMPETENCIES = {
       "Try time-blocking and review what actually stuck after a month",
       "Align with your manager on top 3 priorities and revisit weekly",
     ],
+    learning: ["Time Management Fundamentals", "Productivity Tips", "Managing Your Focus"],
   },
   strategy: {
     label: "Strategic Thinking",
@@ -120,6 +127,7 @@ const COMPETENCIES = {
       "Sit in on planning conversations one level up and take notes on what's weighed",
       "Write a one-page 'where could this go in a year' for an area you own",
     ],
+    learning: ["Strategic Thinking", "Business Strategy Foundations", "Thinking Like a Leader"],
   },
   people: {
     label: "People Development",
@@ -134,6 +142,7 @@ const COMPETENCIES = {
       "Practice delegating something you'd normally keep, and coach rather than correct",
       "Read one book on coaching and try one technique in your next 1:1",
     ],
+    learning: ["Coaching and Developing Employees", "Giving and Receiving Feedback", "Delegating Tasks"],
   },
   publicSpeaking: {
     label: "Public Speaking",
@@ -148,6 +157,7 @@ const COMPETENCIES = {
       "Join a Toastmasters group or take a structured public-speaking course",
       "Record myself presenting, watch it back, and pick one concrete thing to improve",
     ],
+    learning: ["Public Speaking Foundations", "Overcoming Speaking Anxiety", "Presentation Skills"],
   },
   coaching: {
     label: "Coaching",
@@ -162,6 +172,7 @@ const COMPETENCIES = {
       "Practice active listening: in your next 1:1, spend more time asking than telling",
       "Find someone to coach regularly and ask them what's most helpful",
     ],
+    learning: ["Coaching Skills for Leaders", "The GROW Coaching Model", "Active Listening"],
   },
   projectManagement: {
     label: "Project Management",
@@ -176,6 +187,7 @@ const COMPETENCIES = {
       "Learn a method or tool (e.g. Kanban, RACI, a project tracker) and apply it to real work",
       "Run a project retro at the end and capture what to do differently next time",
     ],
+    learning: ["Project Management Foundations", "Agile Foundations", "Managing Small Projects"],
   },
 };
 
@@ -323,11 +335,11 @@ function dateStatus(s, completed) {
 // ---- storage helpers (graceful if unavailable) ----
 const store = {
   async get(key) {
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
     catch { return null; }
   },
   async set(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    try { await window.storage.set(key, JSON.stringify(val)); } catch {}
   },
 };
 
@@ -507,6 +519,11 @@ export default function App() {
     .ideachip{display:block;width:100%;text-align:left;padding:9px 12px;background:#fff;border:1px solid #ecdcc0;border-radius:8px;font-family:inherit;font-size:.86rem;color:var(--ink);cursor:pointer;margin-bottom:7px;transition:.13s;line-height:1.35}
     .ideachip:last-child{margin-bottom:0}
     .ideachip:hover{border-color:var(--gold);background:#fffdf8;transform:translateX(2px)}
+    .lllist{display:flex;flex-direction:column;gap:8px}
+    .lltoggle{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;background:var(--card);border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:.88rem;font-weight:600;color:var(--accent-deep);cursor:pointer;transition:.13s}
+    .lltoggle:hover{border-color:var(--accent);background:var(--accent-soft)}
+    .llchip{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--accent-soft);border:1px solid #cfe0e2;border-radius:9px;font-size:.88rem;color:var(--ink);text-decoration:none;transition:.13s}
+    .llchip:hover{border-color:var(--accent);background:#d7e7ea;transform:translateX(2px)}
     .ideanote{font-size:.74rem;color:var(--muted);margin-top:6px}
     .linkbtn{background:none;border:0;color:var(--accent);font-family:inherit;font-size:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0}
     .aihelp{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
@@ -1372,6 +1389,7 @@ function GoalModal({ onClose, onSave, seed, roleCtx, existing }) {
   const [actionTiming, setActionTiming] = useState(existing?.actionTiming || {});
   const [actionDates, setActionDates] = useState(existing?.actionDates || {});
   const [custom, setCustom] = useState("");
+  const [showLearning, setShowLearning] = useState(false);
 
   // When editing a custom-area goal, seed the AI lists so the saved actions still render as toggleable
   useEffect(() => {
@@ -1400,6 +1418,15 @@ function GoalModal({ onClose, onSave, seed, roleCtx, existing }) {
   const areaLabel = isCustom ? customLabel : (COMPETENCIES[comp]?.label || "");
   const goalIdeas = useAiSource ? aiIdeas : (COMPETENCIES[comp]?.goalIdeas || []);
   const suggestedActions = useAiSource ? aiActions : (COMPETENCIES[comp]?.actions || []);
+  // LinkedIn Learning search topics. For custom areas, search the typed area itself.
+  // The "technical" competency uses <AREA> as a placeholder for the person's own field.
+  const rawLearning = isCustom
+    ? (customLabel ? [customLabel] : [])
+    : (COMPETENCIES[comp]?.learning || []);
+  const learningTopics = rawLearning
+    .map((t) => t.replace(/<AREA>/g, (areaLabel || "your field")))
+    .filter(Boolean);
+  const llUrl = (term) => `https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(term)}`;
 
   useEffect(() => {
     if (comp && !isCustom && !isMastery && COMPETENCIES[comp] && actions.length === 0) {
@@ -1589,6 +1616,32 @@ Return ONLY valid JSON, no markdown, no preamble, in exactly this shape:
                 onKeyDown={(e) => { if (e.key === "Enter" && custom.trim() && !actions.includes(custom.trim())) { setActions([...actions, custom.trim()]); setCustom(""); } }} />
               <button className="btn btn-ghost" onClick={() => { const t = custom.trim(); if (t && !actions.includes(t)) { setActions([...actions, t]); setCustom(""); } }}>Add</button>
             </div>
+          </div>
+        )}
+
+        {(comp || isCustom) && learningTopics.length > 0 && (
+          <div className="field">
+            <button type="button" className="lltoggle" onClick={() => setShowLearning(!showLearning)}>
+              <Compass size={15} style={{ flexShrink: 0, color: "var(--accent-deep)" }} />
+              <span style={{ flex: 1, textAlign: "left" }}>Find courses on LinkedIn Learning</span>
+              <ChevronRight size={17} style={{ flexShrink: 0, color: "var(--muted)", transform: showLearning ? "rotate(90deg)" : "none", transition: ".2s" }} />
+            </button>
+            {showLearning && (
+              <div style={{ marginTop: 11 }}>
+                <div className="ideanote" style={{ marginTop: 0, marginBottom: 10 }}>
+                  These open LinkedIn Learning in a new tab with a search already run{isCustom ? ` for "${customLabel}"` : ""} — no need to figure out what to search for.
+                </div>
+                <div className="lllist">
+                  {learningTopics.map((t, i) => (
+                    <a key={i} className="llchip" href={llUrl(t)} target="_blank" rel="noopener noreferrer">
+                      <Compass size={15} style={{ flexShrink: 0, color: "var(--accent-deep)" }} />
+                      <span style={{ flex: 1 }}>{t}</span>
+                      <ArrowRight size={14} style={{ flexShrink: 0, color: "var(--muted)" }} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
